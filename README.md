@@ -83,3 +83,9 @@ Documents are uploaded to Daytona and selected excerpts sent to the configured m
 | `COMPANY.md` | Bidder details read at the start of each run |
 | `make_demo.py` | Generates the synthetic tender pack |
 | `.env.example`, `requirements.txt` | Configuration template and dependencies |
+
+## Judging criteria at a glance
+- **Completeness:** working CLI, end to end on a real GeBIZ tender pack (PDF, XLSX, DOCX, DOC).
+- **Innovation:** autonomous self-check loop; failed quotes or low confidence send the agent back into the live sandbox for a wider read, and cross-references trigger follow-ups in other sandboxes.
+- **Real problem:** Temasek Polytechnic cleaning tender TPO000/EFM/14/26; NO-GO on FM02 L6 requirement (Section D cl. 1.1, p. EC/2), cited.
+- **Sponsor tech:** one Daytona sandbox per file from a custom snapshot, run in parallel, re-entered by the loop, deleted after.
