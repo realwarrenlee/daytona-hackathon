@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+
+.venv/
+.agents/
+__pycache__/
+output/
+tests/
+docs/
+demo/
+Temasek/
+PUB/
