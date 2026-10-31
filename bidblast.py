@@ -103,6 +103,9 @@ def load_company(path):
 
 
 def verify_finding(item, pages):
+    if not (isinstance(item.get('file'), str) and type(item.get('page')) is int
+            and isinstance(item.get('quote'), str)):
+        return False
     quote = normalized(item.get('quote', ''))
     return len(quote) >= 16 and quote in normalized(pages.get((item.get('file'), item.get('page')), ''))
 
@@ -155,8 +158,11 @@ def plan_reads(references, pages, counts, seen):
         name, page = ref.get('file'), ref.get('page')
         if not verify_finding(source, pages):
             unresolved.append('Unverified cross-reference quotation.')
-        elif name not in counts:
+        elif not isinstance(name, str) or name not in counts:
             unresolved.append(f'Referenced document not found: {name}')
+        elif page is None:
+            # Targeted search handles unknown pages; final coverage records unread content.
+            continue
         elif type(page) is not int or not 1 <= page <= counts[name]:
             unresolved.append(f'Reference needs a valid page/section: {name}')
         elif (name, page) not in seen and (name, page) not in reads:
@@ -221,6 +227,12 @@ class Model:
         return data
 
 
+class SandboxCommandError(RuntimeError):
+    def __init__(self, command, response):
+        super().__init__(f'Daytona command failed (exit {response.exit_code}): {command}')
+        self.output = response.result
+
+
 class DaytonaReader:
     def __init__(self, files, log):
         self.files, self.log = files, log
@@ -237,7 +249,13 @@ class DaytonaReader:
         self.log(f'Sandbox created: {self.sandbox.id}')
         try:
             self.execute('mkdir -p /tmp/bidblast')
-            self.execute('python -m pip install -q pypdf==6.21.4 python-docx==1.2.0 openpyxl==3.1.5', timeout=180)
+            formats = {path.suffix.lower() for path in self.files}
+            packages = [package for suffix, package in [('.pdf','pypdf==6.21.4'),
+                        ('.docx','python-docx==1.2.0'),('.xlsx','openpyxl==3.1.5')] if suffix in formats]
+            if packages:
+                self.log('Preparing document extraction dependencies in Daytona: ' + ', '.join(packages))
+                # Avoid unnecessary downloads and pip's network version check during PDF-only runs.
+                self.execute('python -m pip install --disable-pip-version-check -q ' + ' '.join(packages), timeout=180)
             if any(p.suffix.lower() == '.doc' for p in self.files):
                 self.execute('which antiword || (sudo apt-get update -qq && sudo apt-get install -y -qq antiword)', timeout=180)
             self.sandbox.fs.upload_file(Path(__file__).with_name('inspect_file.py').read_bytes(), '/tmp/bidblast/inspect_file.py')
@@ -256,7 +274,7 @@ class DaytonaReader:
     def execute(self, command, timeout=90):
         response = self.sandbox.process.exec(command, timeout=timeout)
         if response.exit_code != 0:
-            raise RuntimeError('Sandbox command failed: ' + response.result[-1800:])
+            raise SandboxCommandError(command, response)
         return response.result
 
     def inspect(self):
@@ -330,7 +348,8 @@ def run(pack, profile, output, log=print, company_file=None):
             searches = []
             for ref in data['references']:
                 source = dict(file=ref.get('source_file'), page=ref.get('source_page'), quote=ref.get('quote'))
-                if verify_finding(source, pages) and ref.get('file') in counts and ref.get('page') is None:
+                if (verify_finding(source, pages) and isinstance(ref.get('file'), str)
+                        and ref['file'] in counts and ref.get('page') is None):
                     searches.append({'file':ref['file'], 'query':ref['quote']})
             reads = list(dict.fromkeys(reads + invalid))
             pending = [{'file':f, 'page':p} for f,p in reads if (f,p) not in requested]
@@ -441,6 +460,10 @@ def main():
     except KeyboardInterrupt:
         print('Interrupted.', file=sys.stderr)
         return 130
+    except SandboxCommandError as error:
+        # Only locally constructed command details are safe to display, not raw remote output.
+        print(f'Run failed: {error}. No new report was written.', file=sys.stderr)
+        return 1
     except Exception as error:
         # Do not dump API responses or URLs that could contain credentials.
         print(f'Run failed ({type(error).__name__}). Check API access, configuration and document formats.', file=sys.stderr)

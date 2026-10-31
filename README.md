@@ -85,7 +85,7 @@ Documents are uploaded to Daytona and selected excerpts sent to the configured m
 | `.env.example`, `requirements.txt` | Configuration template and dependencies |
 
 ## Judging criteria at a glance
-- **Completeness:** working CLI plus HTML report, end to end on a real GeBIZ tender pack (PDF, DOCX, DOC, XLSX).
-- **Innovation:** autonomous self-check loop; failed quotes, low confidence or cross-references send the agent back into the live Daytona sandbox for targeted reads (max two rounds), and findings update.
+- **Completeness:** working CLI plus HTML report, tested end to end on a real GeBIZ tender pack containing PDF, DOC and XLSX files. DOCX extraction is covered by local tests.
+- **Innovation:** an investigation loop uses failed quotation checks, document references and incomplete coverage to request targeted reads in the live Daytona sandbox (max two follow-up rounds), then updates the findings.
 - **Real problem:** Temasek Polytechnic cleaning tender TPO000/EFM/14/26; NO-GO on the FM02 L6 requirement (Section D cl. 1.1, p. EC/2), cited.
 - **Sponsor tech:** Daytona sandboxes for extraction and follow-up reads (deleted after each run); Muse Glimmer 30B served on Nosana GPU compute.

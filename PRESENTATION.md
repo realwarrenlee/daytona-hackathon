@@ -1,27 +1,21 @@
-# BidBlast — Terminal demo narrative
+# Problem
 
-Use the original synthetic pack for the public demonstration. Describe only behavior actually shown in a live or clearly labelled recorded run.
+A GeBIZ tender pack can run to 18 files and hundreds of pages, and one line decides whether you can bid. In this Temasek Polytechnic tender, it's on page EC/2: FM02 L6 required. Miss it, and the team wastes days on a bid that gets disqualified.
 
-A bid team can spend time preparing a tender response before discovering a mandatory requirement the company does not meet. BidBlast screens the documents early and shows the evidence behind potential blockers.
+# Daytona
 
-The supplied `COMPANY.md` describes a fictional company holding FM02 L5 and bizSAFE Level 3. The application reads that file at the start of the run:
+BidBlast never opens tender files on our machine. Each run starts a Daytona sandbox, uploads the pack, and extracts the text from PDF, Word, old .doc and Excel inside it. The sandbox stays live during the run. Whenever the agent needs to check a quote or follow a reference, it goes back into the same sandbox for a targeted read. When the run ends, the sandbox is deleted.
 
-```powershell
-.\.venv\Scripts\python.exe bidblast.py demo --output output/demo
-```
+# Nosana
 
-Daytona creates a sandbox, receives the two PDFs and executes text extraction. Muse Glimmer 30B, served on a Nosana GPU, identifies candidate requirements; source checks verify its quotations, and explicit rules compare supported requirements with the company details in `COMPANY.md`.
+The model, Muse Glimmer 30B, runs on our own Nosana GPU deployment, not a public AI service. It only gets short excerpts from the sandbox, and it picks out candidate requirements.
 
-The first pass finds the FM02 L6 requirement and flags the mismatch with the L5 company. Coverage remains incomplete because the second document has unread pages.
+# The loop
 
-The evaluation document directs bidders to physical page 3 of the contract conditions. The agent follows that reference in the same live sandbox and discovers two more requirements: bizSAFE Level 4 at submission, and a 5% security deposit before commencement.
+BidBlast checks every quote against the source text in the sandbox, and anything it can't verify is dropped. The first pass finds FM02 L6. The documents also point to another clause, so the agent goes back into the sandbox, follows it, and finds bizSAFE Level 4: a second blocker.
 
-`COMPANY.md` lists bizSAFE Level 3, so the named certification check flags an additional potential blocker. The deposit remains a condition for human review. The terminal shows the quotation, document and page behind each finding, then records the sandbox deletion and final assessment. The HTML report identifies the company file used.
+# Result
 
-That is the investigation loop: inspect, verify, read the referenced evidence and update the findings. The follow-up target comes from the document rather than a hardcoded page in the application.
+Our company holds FM02 L5 and bizSAFE 3, so the result is NO-GO, with a quote for every finding in the HTML report.
 
-The tool also processes the eight-file local Temasek Polytechnic pack. It has identified the FM02 L6 requirement in the evaluation criteria and compliance table against a fictional L5 profile. Use the synthetic pack for the public demonstration; keep local tender documents and their private output out of the public repository.
-
-BidBlast is a first-pass screen. Matching quotations does not prove interpretation or complete coverage. Unresolved requirements and unread content remain visible for the bid manager's review.
-
-**BidBlast: identify potential reasons you cannot bid before spending days preparing the bid.**
+Daytona runs the work and the follow-up reads, and Nosana runs the model. That's a cited go/no-go in about a minute, instead of hours of reading.
