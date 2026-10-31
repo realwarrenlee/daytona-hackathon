@@ -85,7 +85,7 @@ Documents are uploaded to Daytona and selected excerpts sent to the configured m
 | `.env.example`, `requirements.txt` | Configuration template and dependencies |
 
 ## Judging criteria at a glance
-- **Completeness:** working CLI, end to end on a real GeBIZ tender pack (PDF, XLSX, DOCX, DOC).
-- **Innovation:** autonomous self-check loop; failed quotes or low confidence send the agent back into the live sandbox for a wider read, and cross-references trigger follow-ups in other sandboxes.
-- **Real problem:** Temasek Polytechnic cleaning tender TPO000/EFM/14/26; NO-GO on FM02 L6 requirement (Section D cl. 1.1, p. EC/2), cited.
-- **Sponsor tech:** one Daytona sandbox per file from a custom snapshot, run in parallel, re-entered by the loop, deleted after.
+- **Completeness:** working CLI plus HTML report, end to end on a real GeBIZ tender pack (PDF, DOCX, DOC, XLSX).
+- **Innovation:** autonomous self-check loop; failed quotes, low confidence or cross-references send the agent back into the live Daytona sandbox for targeted reads (max two rounds), and findings update.
+- **Real problem:** Temasek Polytechnic cleaning tender TPO000/EFM/14/26; NO-GO on the FM02 L6 requirement (Section D cl. 1.1, p. EC/2), cited.
+- **Sponsor tech:** Daytona sandboxes for extraction and follow-up reads (deleted after each run); Muse Glimmer 30B served on Nosana GPU compute.
